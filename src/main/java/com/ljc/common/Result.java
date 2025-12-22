@@ -14,11 +14,24 @@ public class Result<T> { // 必须有这个 <T>
 
     // 成功返回的静态方法
     public static <T> Result<T> success(T data) {
+
         return new Result<>(200, "操作成功", data);
+
     }
 
     // 失败返回的静态方法
     public static <T> Result<T> error(Integer code, String message) {
+
         return new Result<>(code, message, null);
+
     }
+
+    // 失败：默认用 400
+    public static <T> Result<T> fail(String message) {
+
+        return new Result<>(400, message, null);
+
+    }
+
+
 }

@@ -1,39 +1,43 @@
 # ljc-ticket-saas
 
-一个工单系统的最小可运行骨架（Spring Boot + MyBatis-Plus + MySQL）
+一个 Spring Boot + MyBatis-Plus 的练手后端项目（当前已完成 WorkOrder 工单的基础骨架：创建、分页查询、筛选、改状态）。
 
-## 本地运行
+## Tech Stack
+- Java 17
+- Spring Boot
+- MyBatis-Plus
+- MySQL
+- Lombok
 
-1. 创建数据库
-```sql
-CREATE DATABASE IF NOT EXISTS ljc_ticket_saas DEFAULT CHARSET utf8mb4;
-```
+## Quick Start
 
-2. 配置数据库账号密码（推荐用环境变量）
-- Windows (PowerShell)
-```powershell
-$env:DB_USER="root"
-$env:DB_PASS="你的密码"
-```
-- macOS / Linux
-```bash
-export DB_USER=root
-export DB_PASS='你的密码'
-```
+### 1. 配置数据库环境变量（推荐）
+在 IntelliJ：运行配置（Edit Configurations）里设置环境变量：
 
-3. 启动项目  
-启动后会自动执行 `schema.sql` 和 `data.sql`
+- `DB_USER=root`
+- `DB_PASS=020222`
 
-## 现有接口（兼容旧路径 + 新路径）
+### 2. 数据库连接
+默认连接在 `application.properties`：
 
-- 工单列表  
-  - `GET /workorder`
-  - `GET /api/work-orders`
+- DB: `ljc_ticket_saas`
+- URL: `jdbc:mysql://localhost:3306/ljc_ticket_saas?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf-8`
 
-- 员工列表  
-  - `GET /employee`
-  - `GET /api/employees`
+项目启动时会执行：
+- `classpath:schema.sql`
+- `classpath:data.sql`
 
-- 工单处理记录列表  
-  - `GET /tickets`
-  - `GET /api/tickets`
+### 3. 启动项目
+运行 `LjcTicketSaasApplication`
+
+默认端口：
+- `http://localhost:8080`
+
+---
+
+## API（Work Orders）
+
+### 1) 创建工单
+**POST** `/api/work-orders`
+
+Body(JSON)：
