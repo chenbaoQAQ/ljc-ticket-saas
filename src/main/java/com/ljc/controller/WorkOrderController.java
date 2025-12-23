@@ -26,11 +26,11 @@ public class WorkOrderController {
         return Result.success(workOrderService.list());
     }
 
-    // ✅ 分页 + 筛选 + 排序（只保留一个，不要重复写两个同名）
+    // ✅ 分页 + 筛选 + 排序
     @GetMapping("/api/work-orders/page")
     public Result<Page<WorkOrder>> pageWorkOrders(
-            @RequestParam(defaultValue = "1") long page,
-            @RequestParam(defaultValue = "10") long size,
+            @RequestParam(defaultValue = "1") long page,//你要看第几页
+            @RequestParam(defaultValue = "10") long size,//你要看多少条
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long creatorId,
@@ -61,14 +61,14 @@ public class WorkOrderController {
         return Result.success(workOrderService.page(p, qw));
     }
 
-    // ✅ 创建工单（返回 id）
+    //  创建工单（返回 id）
     @PostMapping("/api/work-orders")
     public Result<Long> createWorkOrder(@RequestBody WorkOrderCreateReq req) {
         Long id = workOrderService.createWorkOrder(req);
         return Result.success(id);
     }
 
-    // ✅ 详情
+    //  详情
     @GetMapping("/api/work-orders/{id}")
     public Result<WorkOrder> getById(@PathVariable Long id) {
         WorkOrder wo = workOrderService.getById(id);
@@ -78,7 +78,7 @@ public class WorkOrderController {
         return Result.success(wo);
     }
 
-    // ✅ 改状态（返回更新后的工单）
+    //  改状态（返回更新后的工单）
     @PutMapping("/api/work-orders/{id}/status")
     public Result<WorkOrder> updateStatus(
             @PathVariable Long id,

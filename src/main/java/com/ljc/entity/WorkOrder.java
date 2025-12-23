@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @TableName("work_order")
 public class WorkOrder {
-    @TableId
+    @TableId//主键
     private Long id;
 
     private String title;   // 工单标题
