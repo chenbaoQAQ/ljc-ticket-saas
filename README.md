@@ -1,6 +1,7 @@
 # ljc-ticket-saas
 
-一个 Spring Boot + MyBatis-Plus 的练手后端项目（当前已完成 WorkOrder 工单的基础骨架：创建、分页查询、筛选、改状态）。
+一个 Spring Boot + MyBatis-Plus 的练手后端项目
+（当前已完成 WorkOrder 工单的基础骨架：创建、分页查询、筛选、改状态）。
 
 ## Tech Stack
 - Java 17
