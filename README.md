@@ -32,7 +32,7 @@
 ---
 ## 🗂️ 数据模型设计
 
-```mermaid
+```
     Company -->|has many| WorkOrder
     WorkOrder -->|has many| Ticket
     Ticket -->|belongs to| WorkOrder
