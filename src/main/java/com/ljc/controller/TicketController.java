@@ -1,16 +1,22 @@
 package com.ljc.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ljc.common.Result;
 import com.ljc.dto.TicketCreateReq;
 import com.ljc.entity.Ticket;
-import com.ljc.entity.WorkOrder;
 import com.ljc.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+
+/*
+qw.eq(...)      // 等于
+qw.like(...)    // 模糊查询
+qw.orderByDesc // 排序
+.orderByDesc等于sql里面的降序
+.orderByAsc等于sql里面的升序
+ */
 
 @RestController
 @RequestMapping
@@ -18,11 +24,6 @@ public class TicketController {
 
     @Autowired
     private TicketService ticketService;
-
-    @GetMapping({"/tickets", "/api/tickets"})
-    public Result<List<Ticket>> listTickets() {
-        return Result.success(ticketService.list());
-    }
 
     @PostMapping("/api/tickets")
     public Result<Long> createTicket(@RequestBody TicketCreateReq req) {
@@ -33,8 +34,8 @@ public class TicketController {
 
 
     //做分页功能+排序（可以直接找第x页的x条数据）
-    @GetMapping("/api/tickets/page")
-    public Result<Page<Ticket>> pageByWorkOrder(
+    @GetMapping("/api/tickets")
+    public Result<Page<Ticket>> listByWorkOrder(
             @RequestParam Long workOrderId,
             @RequestParam(defaultValue = "1") long page,
             @RequestParam(defaultValue = "10") long size
@@ -45,11 +46,6 @@ public class TicketController {
     }
 
 
+
 }
-        /*
-        qw.eq(...)      // 等于
-        qw.like(...)    // 模糊查询
-        qw.orderByDesc // 排序
-        .orderByDesc等于sql里面的降序
-        .orderByAsc等于sql里面的升序
-         */
+
