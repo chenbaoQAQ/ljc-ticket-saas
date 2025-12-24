@@ -1,6 +1,9 @@
 package com.ljc.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ljc.common.BizException;
 import com.ljc.dto.WorkOrderCreateReq;
 import com.ljc.entity.WorkOrder;
 import com.ljc.mapper.WorkOrderMapper;
@@ -70,4 +73,68 @@ public class WorkOrderServiceImpl
         wo.setStatus(s);
         return this.updateById(wo);
     }
+
+    //工单的归属感校验
+    @Override
+    public WorkOrder getByIdWithCompany(Long companyId, Long workOrderId) {
+        if (companyId == null) {
+            throw new BizException("companyId 不能为空");
+        }
+        if (workOrderId == null) {
+            throw new BizException("工单 id 不能为空");
+        }
+
+        WorkOrder wo = this.getById(workOrderId);
+        if (wo == null) {
+            throw new BizException("工单不存在");
+        }
+        if (wo.getCompanyId() == null || !wo.getCompanyId().equals(companyId)) {
+            throw new BizException("无权限访问该工单");
+        }
+        return wo;
+    }
+
+
+    @Override
+    public Page<WorkOrder> pageWithCompany(
+            Long companyId,
+            long page,
+            long size,
+            String status,
+            String keyword,
+            Long creatorId,
+            Long handlerId
+    ) {
+        if (companyId == null) {
+            throw new BizException("companyId 不能为空");
+        }
+
+        Page<WorkOrder> p = new Page<>(page, size);
+        LambdaQueryWrapper<WorkOrder> qw = new LambdaQueryWrapper<>();
+
+        // 单租户阶段：只查当前 company
+        qw.eq(WorkOrder::getCompanyId, companyId);
+
+        if (StringUtils.hasText(status)) {//status：不为空
+            qw.eq(WorkOrder::getStatus, status);
+        }
+        if (creatorId != null) { //creatorId：按创建人筛选
+            qw.eq(WorkOrder::getCreatorId, creatorId);
+        }
+        if (handlerId != null) {//handlerId：按处理人筛选
+            qw.eq(WorkOrder::getHandlerId, handlerId);
+        }
+        if (StringUtils.hasText(keyword)) {//keyword：搜索关键词
+            qw.and(w -> w
+                    .like(WorkOrder::getTitle, keyword)
+                    .or()
+                    .like(WorkOrder::getContent, keyword)
+            );
+        }
+
+        qw.orderByDesc(WorkOrder::getId);
+        return this.page(p, qw);
+    }
+
+
 }

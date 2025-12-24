@@ -20,46 +20,29 @@ public class WorkOrderController {
     @Autowired
     private WorkOrderService workOrderService;
 
-    // 你原来的全量接口：保留不动
-    @GetMapping({"/workorder", "/api/work-orders"})
-    public Result<List<WorkOrder>> listWorkOrders() {
-        return Result.success(workOrderService.list());
-    }
-
     // ✅ 分页 + 筛选 + 排序
-    @GetMapping("/api/work-orders/page")
+    @GetMapping("/api/work-orders")
     public Result<Page<WorkOrder>> pageWorkOrders(
-            @RequestParam(defaultValue = "1") long page,//默认查找第一页
-            @RequestParam(defaultValue = "10") long size,//你要看多少条
+            @RequestParam(defaultValue = "1") long page,
+            @RequestParam(defaultValue = "10") long size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long creatorId,
             @RequestParam(required = false) Long handlerId
     ) {
-        Page<WorkOrder> p = new Page<>(page, size);
-        LambdaQueryWrapper<WorkOrder> qw = new LambdaQueryWrapper<>();
-
-        // 单租户阶段：只查 companyId=1
-        qw.eq(WorkOrder::getCompanyId, 1L);
-
-        if (StringUtils.hasText(status)) {
-            qw.eq(WorkOrder::getStatus, status);
-        }
-        if (creatorId != null) {
-            qw.eq(WorkOrder::getCreatorId, creatorId);
-        }
-        if (handlerId != null) {
-            qw.eq(WorkOrder::getHandlerId, handlerId);
-        }
-        if (StringUtils.hasText(keyword)) {
-            qw.and(w -> w.like(WorkOrder::getTitle, keyword)
-                    .or()
-                    .like(WorkOrder::getContent, keyword));
-        }
-
-        qw.orderByDesc(WorkOrder::getId);
-        return Result.success(workOrderService.page(p, qw));
+        Long companyId = 1L; // TODO: 登录后从上下文取
+        Page<WorkOrder> result = workOrderService.pageWithCompany(
+                companyId,
+                page,
+                size,
+                status,
+                keyword,
+                creatorId,
+                handlerId
+        );
+        return Result.success(result);
     }
+
 
     //  创建工单（返回 id）
     @PostMapping("/api/work-orders")
@@ -71,12 +54,11 @@ public class WorkOrderController {
     //  详情
     @GetMapping("/api/work-orders/{id}")
     public Result<WorkOrder> getById(@PathVariable Long id) {
-        WorkOrder wo = workOrderService.getById(id);
-        if (wo == null) {
-            return Result.error(404, "工单不存在");
-        }
+        Long companyId = 1L; // TODO: 登录后从上下文取
+        WorkOrder wo = workOrderService.getByIdWithCompany(companyId, id);
         return Result.success(wo);
     }
+
 
     //  改状态（返回更新后的工单）
     @PutMapping("/api/work-orders/{id}/status")
@@ -94,6 +76,7 @@ public class WorkOrderController {
             return Result.error(400, e.getMessage());
         }
     }
+
 
 
 }
