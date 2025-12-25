@@ -11,7 +11,6 @@ import com.ljc.vo.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -22,7 +21,7 @@ public class WorkOrderController {
     private WorkOrderService workOrderService;
 
     /**
-     * 分页 + 筛选 + 排序（返回 VO）
+     * 工单分页 + 筛选（返回 VO）
      *
      * GET /api/work-orders?page=1&size=10&status=OPEN&keyword=xx&creatorId=1&handlerId=2
      */
@@ -38,18 +37,10 @@ public class WorkOrderController {
         Long companyId = 1L; // TODO: 登录后从上下文取
 
         Page<WorkOrder> entityPage = workOrderService.pageWithCompany(
-                companyId,
-                page,
-                size,
-                status,
-                keyword,
-                creatorId,
-                handlerId
+                companyId, page, size, status, keyword, creatorId, handlerId
         );
 
-        // Page<WorkOrder> -> Page<WorkOrderVO>
-        Page<WorkOrderVO> voPage = toVOPage(entityPage);
-        return Result.success(voPage);
+        return Result.success(toVOPage(entityPage));
     }
 
     /**
@@ -107,7 +98,6 @@ public class WorkOrderController {
             @PathVariable Long id,
             @RequestBody WorkOrderStatusReq req
     ) {
-        // 这里先保持你原来的 updateStatus 逻辑（它目前没做 company 校验）
         workOrderService.updateStatus(id, req.getStatus());
 
         Long companyId = 1L; // TODO: 登录后从上下文取
@@ -116,7 +106,7 @@ public class WorkOrderController {
     }
 
     // =========================
-    // VO 转换区（只做字段筛选）
+    // VO 转换（只做返回结构）
     // =========================
 
     private WorkOrderVO toVO(WorkOrder wo) {
@@ -130,23 +120,25 @@ public class WorkOrderController {
         vo.setCreatorId(wo.getCreatorId());
         vo.setHandlerId(wo.getHandlerId());
 
+        // 先不处理 createTime：你实体里现在没有 getCreateTime / 或字段还没统一
+        // vo.setCreateTime(TimeUtil.format(wo.getCreateTime()));
 
         return vo;
     }
 
     private Page<WorkOrderVO> toVOPage(Page<WorkOrder> entityPage) {
-        Page<WorkOrderVO> voPage = new Page<>();
-        voPage.setCurrent(entityPage.getCurrent());
-        voPage.setSize(entityPage.getSize());
-        voPage.setTotal(entityPage.getTotal());
-        voPage.setPages(entityPage.getPages());
+        Page<WorkOrderVO> voPage = new Page<>(
+                entityPage.getCurrent(),
+                entityPage.getSize(),
+                entityPage.getTotal()
+        );
 
-        List<WorkOrderVO> voRecords = entityPage.getRecords()
-                .stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
+        voPage.setRecords(
+                entityPage.getRecords().stream()
+                        .map(this::toVO)
+                        .collect(Collectors.toList())
+        );
 
-        voPage.setRecords(voRecords);
         return voPage;
     }
 }
