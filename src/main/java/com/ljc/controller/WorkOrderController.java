@@ -1,16 +1,18 @@
 package com.ljc.controller;
 
-import com.ljc.dto.WorkOrderUpdateReq;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ljc.common.Result;
 import com.ljc.dto.WorkOrderCreateReq;
 import com.ljc.dto.WorkOrderStatusReq;
+import com.ljc.dto.WorkOrderUpdateReq;
 import com.ljc.entity.WorkOrder;
 import com.ljc.service.WorkOrderService;
+import com.ljc.vo.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping
@@ -19,9 +21,13 @@ public class WorkOrderController {
     @Autowired
     private WorkOrderService workOrderService;
 
-    // 分页 + 筛选 + 排序
+    /**
+     * 分页 + 筛选 + 排序（返回 VO）
+     *
+     * GET /api/work-orders?page=1&size=10&status=OPEN&keyword=xx&creatorId=1&handlerId=2
+     */
     @GetMapping("/api/work-orders")
-    public Result<Page<WorkOrder>> pageWorkOrders(
+    public Result<Page<WorkOrderVO>> pageWorkOrders(
             @RequestParam(defaultValue = "1") long page,
             @RequestParam(defaultValue = "10") long size,
             @RequestParam(required = false) String status,
@@ -30,7 +36,8 @@ public class WorkOrderController {
             @RequestParam(required = false) Long handlerId
     ) {
         Long companyId = 1L; // TODO: 登录后从上下文取
-        Page<WorkOrder> result = workOrderService.pageWithCompany(
+
+        Page<WorkOrder> entityPage = workOrderService.pageWithCompany(
                 companyId,
                 page,
                 size,
@@ -39,28 +46,40 @@ public class WorkOrderController {
                 creatorId,
                 handlerId
         );
-        return Result.success(result);
+
+        // Page<WorkOrder> -> Page<WorkOrderVO>
+        Page<WorkOrderVO> voPage = toVOPage(entityPage);
+        return Result.success(voPage);
     }
 
-
-    //  创建工单（返回 id）
+    /**
+     * 创建工单（返回 id）
+     *
+     * POST /api/work-orders
+     */
     @PostMapping("/api/work-orders")
     public Result<Long> createWorkOrder(@RequestBody WorkOrderCreateReq req) {
         Long id = workOrderService.createWorkOrder(req);
         return Result.success(id);
     }
 
-    //  详情
+    /**
+     * 工单详情（返回 VO）
+     *
+     * GET /api/work-orders/{id}
+     */
     @GetMapping("/api/work-orders/{id}")
-    public Result<WorkOrder> getWorkOrderDetail(@PathVariable Long id) {
-        Long companyId = 1L; // TODO: 登录后从登录上下文获取
-
-        WorkOrder workOrder = workOrderService.getByIdWithCompany(companyId, id);
-        return Result.success(workOrder);
+    public Result<WorkOrderVO> getWorkOrderDetail(@PathVariable Long id) {
+        Long companyId = 1L; // TODO: 登录后从上下文取
+        WorkOrder wo = workOrderService.getByIdWithCompany(companyId, id);
+        return Result.success(toVO(wo));
     }
 
-
-    //更新内容
+    /**
+     * 更新工单内容（返回 void）
+     *
+     * PUT /api/work-orders/{id}
+     */
     @PutMapping("/api/work-orders/{id}")
     public Result<Void> updateContent(
             @PathVariable Long id,
@@ -78,20 +97,56 @@ public class WorkOrderController {
         return Result.success(null);
     }
 
-
-
-    //  改状态（返回更新后的工单）
+    /**
+     * 更新工单状态（返回 VO）
+     *
+     * PUT /api/work-orders/{id}/status
+     */
     @PutMapping("/api/work-orders/{id}/status")
-    public Result<WorkOrder> updateStatus(
+    public Result<WorkOrderVO> updateStatus(
             @PathVariable Long id,
             @RequestBody WorkOrderStatusReq req
     ) {
+        // 这里先保持你原来的 updateStatus 逻辑（它目前没做 company 校验）
         workOrderService.updateStatus(id, req.getStatus());
-        return Result.success(workOrderService.getById(id));
+
+        Long companyId = 1L; // TODO: 登录后从上下文取
+        WorkOrder wo = workOrderService.getByIdWithCompany(companyId, id);
+        return Result.success(toVO(wo));
     }
 
+    // =========================
+    // VO 转换区（只做字段筛选）
+    // =========================
+
+    private WorkOrderVO toVO(WorkOrder wo) {
+        if (wo == null) return null;
+
+        WorkOrderVO vo = new WorkOrderVO();
+        vo.setId(wo.getId());
+        vo.setTitle(wo.getTitle());
+        vo.setContent(wo.getContent());
+        vo.setStatus(wo.getStatus());
+        vo.setCreatorId(wo.getCreatorId());
+        vo.setHandlerId(wo.getHandlerId());
 
 
+        return vo;
+    }
 
+    private Page<WorkOrderVO> toVOPage(Page<WorkOrder> entityPage) {
+        Page<WorkOrderVO> voPage = new Page<>();
+        voPage.setCurrent(entityPage.getCurrent());
+        voPage.setSize(entityPage.getSize());
+        voPage.setTotal(entityPage.getTotal());
+        voPage.setPages(entityPage.getPages());
+
+        List<WorkOrderVO> voRecords = entityPage.getRecords()
+                .stream()
+                .map(this::toVO)
+                .collect(Collectors.toList());
+
+        voPage.setRecords(voRecords);
+        return voPage;
+    }
 }
-
