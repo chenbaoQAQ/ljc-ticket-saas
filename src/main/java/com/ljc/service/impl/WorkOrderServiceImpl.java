@@ -96,7 +96,39 @@ public class WorkOrderServiceImpl
         return wo;
     }
 
+    //公司的归属感校验
+    @Override
+    public boolean updateContentWithCompany(Long companyId, Long workOrderId, String title, String content) {
+        if (companyId == null) {
+            throw new BizException("companyId 不能为空");
+        }
+        if (workOrderId == null) {
+            throw new BizException("工单 id 不能为空");
+        }
 
+        // 至少要更新一个字段
+        boolean hasTitle = StringUtils.hasText(title);
+        boolean hasContent = StringUtils.hasText(content);
+        if (!hasTitle && !hasContent) {
+            throw new BizException("更新内容不能为空");
+        }
+
+        // 先做存在性 + 归属校验（复用你已有的方法）
+        WorkOrder wo = this.getByIdWithCompany(companyId, workOrderId);
+
+        // 只更新允许的字段
+        if (hasTitle) {
+            wo.setTitle(title.trim());
+        }
+        if (hasContent) {
+            wo.setContent(content.trim());
+        }
+
+        // 写回数据库
+        return this.updateById(wo);
+    }
+
+    //分页 + 条件筛选的工单查询
     @Override
     public Page<WorkOrder> pageWithCompany(
             Long companyId,
@@ -137,41 +169,5 @@ public class WorkOrderServiceImpl
         qw.orderByDesc(WorkOrder::getId);
         return this.page(p, qw);
     }
-
-    //公司的归属感校验
-    @Override
-    public boolean updateContentWithCompany(Long companyId, Long workOrderId, String title, String content) {
-        if (companyId == null) {
-            throw new BizException("companyId 不能为空");
-        }
-        if (workOrderId == null) {
-            throw new BizException("工单 id 不能为空");
-        }
-
-        // 至少要更新一个字段
-        boolean hasTitle = StringUtils.hasText(title);
-        boolean hasContent = StringUtils.hasText(content);
-        if (!hasTitle && !hasContent) {
-            throw new BizException("更新内容不能为空");
-        }
-
-        // 先做存在性 + 归属校验（复用你已有的方法）
-        WorkOrder wo = this.getByIdWithCompany(companyId, workOrderId);
-
-        // 只更新允许的字段
-        if (hasTitle) {
-            wo.setTitle(title.trim());
-        }
-        if (hasContent) {
-            wo.setContent(content.trim());
-        }
-
-        // 写回数据库
-        return this.updateById(wo);
-    }
-
-
-
-
 
 }

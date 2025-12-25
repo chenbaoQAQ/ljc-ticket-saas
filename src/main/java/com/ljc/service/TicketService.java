@@ -10,4 +10,7 @@ public interface TicketService extends IService<Ticket> {
     Long createTicket(Long companyId, TicketCreateReq req);//Long companyId保证了这个历史记录只能由这个公司创建
 
     Page<Ticket> pageByWorkOrder(Long companyId, Long workOrderId, long page, long size);
+
+    Ticket getByIdWithCompany(Long companyId, Long ticketId);
+
 }
