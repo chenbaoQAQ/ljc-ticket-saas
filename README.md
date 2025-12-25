@@ -1,183 +1,128 @@
 # ljc-ticket-saas
 
-一个基于 **Spring Boot + MyBatis-Plus** 的工单系统后端练手项目。  
-当前为 **单租户阶段**，已预留 **多租户演进设计**，重点在后端结构与业务归属校验。
+一个基于 **Spring Boot + MyBatis-Plus** 的多租户工单系统后端练手项目  
+当前阶段：**单租户实现，已预留多租户扩展设计**
 
 ---
 
-## 🎯 项目目的
+## ✨ 项目简介
 
-- 后端能力练习
-- 求职项目展示
+本项目实现了一个基础的工单系统，包含：
 
----
+- **WorkOrder（工单）**
+- **Ticket（工单记录 / 流转记录）**
 
-## 🛠️ 技术栈
-
-**语言**：Java 17  
-**框架**：Spring Boot  
-**ORM**：MyBatis-Plus  
-**数据库**：MySQL  
-**工具**：Lombok
+重点不在“功能堆砌”，而在于：
+- 接口分层清晰
+- 返回结构稳定（VO）
+- 业务校验集中在 Service 层
+- 为后续多租户、登录系统预留扩展空间
 
 ---
 
-## 🧠 核心设计关注点
+## 🧱 技术栈
 
-- ✅ **清晰的分层架构**（Controller / Service）
-- ✅ **强制分页查询**（不提供全量接口）
-- ✅ **业务归属校验**（防越权访问）
-- 🔄 **单租户 → 多租户扩展预留**
-
----
-## 🗂️ 数据模型设计
-
-```
-    Company -->|has many| WorkOrder
-    WorkOrder -->|has many| Ticket
-    Ticket -->|belongs to| WorkOrder
-```
-
-> **设计说明**  
-> Ticket 不直接关联 Company，而是通过 WorkOrder 间接归属，  
-> 以此强制业务归属校验，避免跨公司越权访问。
+- Java 17
+- Spring Boot 2.7.x
+- MyBatis-Plus
+- MySQL
+- Lombok
 
 ---
 
-## 🔐 业务归属与权限设计
+## 🧩 模块设计
 
-### 📌 设计原则
+### 1️⃣ WorkOrder（工单）
 
-- ❌ 禁止仅凭 **ID** 直接访问资源
-- ✅ 所有关键查询 **必须携带 company 约束**
-- 🧹 Controller 层不处理任何业务归属逻辑
+**职责**：
+- 表示一条完整的工单
+- 归属于某个公司（companyId）
+- 状态流转（OPEN / IN_PROGRESS / CLOSED）
 
-### 🔧 Service 层统一约束方法
+**已实现接口**：
 
-- `getByIdWithCompany(companyId, resourceId)` - 带公司归属校验的单条查询
-- `pageWithCompany(companyId, ...)` - 带公司归属的分页查询
+- `GET /api/work-orders`  
+  工单分页查询（支持筛选）
 
-### 🎫 Ticket 访问规则
+- `POST /api/work-orders`  
+  创建工单
 
-1. 校验 WorkOrder 是否存在
-2. 校验 WorkOrder 是否属于当前 Company
-3. 执行 Ticket 相关操作（防跨公司越权）
+- `GET /api/work-orders/{id}`  
+  工单详情（VO）
 
-### 🧪 当前阶段说明
+- `PUT /api/work-orders/{id}`  
+  更新工单内容
 
-- 使用固定 `company_id = 1` 模拟单租户环境
-- 计划在登录接入后，从安全上下文中动态获取 `companyId`
-
----
-
-## 🧱 项目分层架构
-
-### 🎮 Controller 层
-
-**职责：**
-- 接收 HTTP 请求参数
-- 返回统一格式的响应
-
-**禁止：**
-- 实现业务规则
-- 进行权限或归属校验
+- `PUT /api/work-orders/{id}/status`  
+  更新工单状态
 
 ---
 
-### ⚙️ Service 层
+### 2️⃣ Ticket（工单记录）
 
-**职责：**
-- 分页逻辑组装
-- 查询条件筛选
-- 业务归属校验
-- 对外提供带约束的业务方法
+**职责**：
+- 表示工单下的一条操作/沟通记录
+- **必须依附于某个 WorkOrder**
+- 不单独归属公司，而是通过工单做归属校验
 
----
+**已实现接口**：
 
-### 🗃️ Entity
+- `POST /api/tickets`  
+  新建工单记录
 
-- 纯数据库表结构映射对象
+- `GET /api/tickets?workOrderId=xxx`  
+  按工单分页查询记录（时间倒序）
 
----
-
-### 📥 DTO（计划中）
-
-- 方向：前端 → 后端
-- 目的：限制并定义前端可传入的字段
-- 示例：`WorkOrderCreateReq`
+- `GET /api/tickets/{id}`  
+  记录详情（VO）
 
 ---
 
-### 📤 VO（计划中）
+## 🔐 多租户设计说明（当前为单租户实现）
 
-- 方向：后端 → 前端
-- 目的：控制返回给前端的字段范围
+- 当前阶段：
+    - 使用 `companyId = 1L` 写死在 Controller 中
+    - 所有核心业务方法 **已预留 companyId 参数**
 
----
+- 关键设计点：
+    - **工单归属校验统一在 Service 层完成**
+    - Ticket 不直接校验 companyId，而是：
+      ```
+      Ticket → WorkOrder → companyId
+      ```
 
-## 🌐 API 接口概览
-
-### 📋 WorkOrder 相关
-
-**创建工单**
-- 方法：POST
-- 路径：`/api/work-orders`
-- 参数：`title`, `content`, `creatorId`
-
-**分页查询**
-- 方法：GET
-- 路径：`/api/work-orders`
-- 参数：`page`, `size`, `status`, `keyword`, `creatorId`, `handlerId`
-- 注意：**强制分页**，不提供全量查询
-
-**工单详情**
-- 方法：GET
-- 路径：`/api/work-orders/{id}`
-- 注意：自动校验工单存在性及公司归属
-
-**更新状态**
-- 方法：PUT
-- 路径：`/api/work-orders/{id}/status`
-- 参数：`status`
-
-### 🎟️ Ticket 相关
-
-**创建反馈**
-- 方法：POST
-- 路径：`/api/tickets`
-- 参数：`workOrderId`, `description`
-- 注意：自动校验工单归属
-
-**分页查询**
-- 方法：GET
-- 路径：`/api/tickets`
-- 参数：`workOrderId`, `page`, `size`
-- 注意：按时间倒序分页
+后续只需：
+- 接入登录系统
+- 从上下文获取 companyId  
+  即可无缝升级为真正的多租户系统。
 
 ---
 
-## 📌 当前进度与计划
+## 📦 DTO / VO 设计约定
 
-### ✅ 已完成
+- **DTO（Request）**
+    - 仅用于接收前端输入
+    - 只包含必要字段
 
-**WorkOrder 模块**
-- 创建
-- 分页
-- 条件筛选
-- 状态变更
-- company 归属校验
+- **VO（Response）**
+    - 所有查询接口统一返回 VO
+    - 前端不直接依赖 Entity
+    - 字段稳定，可演进
 
-**Ticket 模块**
-- 创建
-- 分页
-- 基于工单的归属校验
+示例：
+```text
+DTO：前端 → 后端
+VO：后端 → 前端
+🚀 当前进度
+
+✅ WorkOrder / Ticket 核心接口完成
+✅ VO 接口统一
+✅ 业务校验集中在 Service 层
 
 ### 📅 待进行
 
-- 🔲 VO 输出对象设计
-- 🔲 登录鉴权集成
-- 🔲 真正的多租户数据隔离支持
-
+⏳ 时间字段（createTime / updateTime）后续统一处理
+⏳ 登录 & 动态 companyId 待实现
 ---
 
 ## 🧭 项目定位
