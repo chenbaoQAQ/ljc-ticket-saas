@@ -8,6 +8,8 @@ import com.ljc.entity.WorkOrder;
 public interface WorkOrderService extends IService<WorkOrder> {
     Long createWorkOrder(WorkOrderCreateReq req);
     boolean updateStatus(Long id, String status);
+    boolean updateContentWithCompany(Long companyId, Long workOrderId, String title, String content);
+
 
     WorkOrder getByIdWithCompany(Long companyId, Long workOrderId);
 

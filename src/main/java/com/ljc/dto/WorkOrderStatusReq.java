@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class WorkOrderStatusReq {
-    private String status;
+    private String status;//状态dto
 }
