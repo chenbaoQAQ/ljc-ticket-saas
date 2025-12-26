@@ -8,6 +8,7 @@ import com.ljc.service.TicketService;
 import com.ljc.vo.TicketVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.ljc.util.TimeUtil;
 
 import java.util.stream.Collectors;
 
@@ -72,9 +73,8 @@ public class TicketController {
         vo.setId(t.getId());
         vo.setWorkOrderId(t.getWorkOrderId());
         vo.setDescription(t.getDescription());
-
-        // createTime 先不统一处理，等你整体时间策略确定
-        // vo.setCreateTime(TimeUtil.format(t.getCreateTime()));
+        vo.setCreateTime(TimeUtil.format(t.getCreateTime()));
+        vo.setUpdateTime(TimeUtil.format(t.getUpdateTime()));
 
         return vo;
     }

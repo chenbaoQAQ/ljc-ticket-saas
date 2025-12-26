@@ -14,4 +14,5 @@ public class WorkOrderVO {
     private Long handlerId;
 
     private String createTime;
+    private String updateTime;
 }

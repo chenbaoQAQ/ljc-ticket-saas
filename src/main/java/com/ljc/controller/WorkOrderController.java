@@ -7,6 +7,7 @@ import com.ljc.dto.WorkOrderStatusReq;
 import com.ljc.dto.WorkOrderUpdateReq;
 import com.ljc.entity.WorkOrder;
 import com.ljc.service.WorkOrderService;
+import com.ljc.util.TimeUtil;
 import com.ljc.vo.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -49,7 +50,7 @@ public class WorkOrderController {
     @PostMapping("/api/work-orders")
     public Result<Long> createWorkOrder(@RequestBody WorkOrderCreateReq req) {
         Long companyId = 1L; // TODO 登录后从上下文取
-        Long id = workOrderService.createWorkOrder(companyId, req);//引用业务层接口
+        Long id = workOrderService.createWorkOrder(companyId, req);
         return Result.success(id);
     }
 
@@ -112,6 +113,8 @@ public class WorkOrderController {
         vo.setStatus(wo.getStatus());
         vo.setCreatorId(wo.getCreatorId());
         vo.setHandlerId(wo.getHandlerId());
+        vo.setCreateTime(TimeUtil.format(wo.getCreateTime()));
+        vo.setUpdateTime(TimeUtil.format(wo.getUpdateTime()));
         return vo;
     }
 
