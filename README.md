@@ -115,9 +115,12 @@ DTO：前端 → 后端
 VO：后端 → 前端
 🚀 当前进度
 
-✅ WorkOrder / Ticket 核心接口完成
-✅ VO 接口统一
-✅ 业务校验集中在 Service 层
+✅ Service 接口统一
+
+✅ companyId 统一
+✅ WorkOrder / Ticket VO 完整
+✅ 接口测试通过
+✅ 异常链路正确
 
 ### 📅 待进行
 

@@ -49,7 +49,7 @@ public class WorkOrderController {
     @PostMapping("/api/work-orders")
     public Result<Long> createWorkOrder(@RequestBody WorkOrderCreateReq req) {
         Long companyId = 1L; // TODO 登录后从上下文取
-        Long id = workOrderService.createWorkOrder(companyId, req);
+        Long id = workOrderService.createWorkOrder(companyId, req);//引用业务层接口
         return Result.success(id);
     }
 
