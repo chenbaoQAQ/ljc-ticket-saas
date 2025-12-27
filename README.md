@@ -1,22 +1,25 @@
 # ljc-ticket-saas
 
 一个基于 **Spring Boot + MyBatis-Plus** 的多租户工单系统后端练手项目  
-当前阶段：**单租户实现，已预留多租户扩展设计**
+当前阶段：**JWT 登录已完成，单租户运行，多租户结构已打通**
 
 ---
 
 ## ✨ 项目简介
 
-本项目实现了一个基础的工单系统，包含：
+本项目实现了一个基础的工单系统（Ticket SaaS 后端雏形），包含：
 
 - **WorkOrder（工单）**
-- **Ticket（工单记录 / 流转记录）**
+- **Ticket（工单流转 / 处理记录）**
+- **JWT 登录与拦截器鉴权**
 
-重点不在“功能堆砌”，而在于：
-- 接口分层清晰
-- 返回结构稳定（VO）
+项目重点不在功能堆砌，而在于：
+
+- 接口职责清晰（Controller / Service / Mapper）
+- DTO / VO 严格区分
 - 业务校验集中在 Service 层
-- 为后续多租户、登录系统预留扩展空间
+- 登录上下文与业务解耦
+- 为单租户 → 多租户平滑演进做好结构设计
 
 ---
 
@@ -26,13 +29,49 @@
 - Spring Boot 2.7.x
 - MyBatis-Plus
 - MySQL
+- JWT（jjwt）
 - Lombok
 
 ---
 
-## 🧩 模块设计
+## 🧩 核心模块
 
-### 1️⃣ WorkOrder（工单）
+### 1️⃣ 登录与鉴权（JWT）
+
+#### 登录流程
+
+1. 调用登录接口：POST /api/login
+2. 校验用户名 / 密码（BCrypt）
+3. 生成 JWT（包含 companyId / employeeId / role / name）
+4. 返回 token 给前端
+5. 前端后续请求统一携带：Authorization: Bearer <token>
+
+#### 拦截器职责
+
+- 拦截所有 `/api/**` 请求
+- 放行：`/api/login`
+      `OPTIONS`（预检请求）
+- 校验 JWT 合法性
+- 解析 claims
+- 写入 `AuthContext（ThreadLocal）`
+- 请求结束后自动 `clear()`
+
+### 2⃣ AuthContext（登录上下文）
+
+通过 `ThreadLocal` 保存当前请求的登录信息：
+
+- companyId
+- employeeId
+- role
+- name
+
+使用方式：
+
+```java
+Long companyId = AuthContext.getCompanyId();
+Long employeeId = AuthContext.getEmployeeId();
+```
+###  WorkOrder（工单）
 
 **职责**：
 - 表示一条完整的工单
@@ -58,7 +97,7 @@
 
 ---
 
-### 2️⃣ Ticket（工单记录）
+### Ticket（工单记录）
 
 **职责**：
 - 表示工单下的一条操作/沟通记录
@@ -81,20 +120,22 @@
 ## 🔐 多租户设计说明（当前为单租户实现）
 
 - 当前阶段：
-    - 使用 `companyId = 1L` 写死在 Controller 中
-    - 所有核心业务方法 **已预留 companyId 参数**
+
+      系统已接入 JWT 登录
+      companyId / employeeId 从 token 中解析
+      业务层统一使用 AuthContext 获取租户信息
+
 
 - 关键设计点：
-    - **工单归属校验统一在 Service 层完成**
-    - Ticket 不直接校验 companyId，而是：
+
+      companyId 校验全部在 Service 层完成
+      Ticket 不直接校验 companyId，而是：
       ```
       Ticket → WorkOrder → companyId
       ```
+      Controller 层不写业务规则，只负责参数接收与返回
 
-后续只需：
-- 接入登录系统
-- 从上下文获取 companyId  
-  即可无缝升级为真正的多租户系统。
+
 
 ---
 
@@ -116,21 +157,15 @@ VO：后端 → 前端
 ```
 🚀 当前进度
 
-✅ Service 接口统一
-✅ companyId 统一
-✅ WorkOrder / Ticket VO 完整
+✅ JWT 登录完成
+✅ 拦截器统一鉴权
+✅ AuthContext 登录上下文
+✅ WorkOrder / Ticket 全链路跑通
+✅ companyId 统一校验
+✅ VO / DTO 结构稳定
 ✅ 接口测试通过
-✅ 异常链路正确
 
-### 📅 待进行
 
-⏳ Ticket SaaS 登录与鉴权改造记录
-目标
-实现 JWT 登录
-登录后从 token 上下文获取 companyId / employeeId
-所有业务接口不再写死 companyId = 1L
-
-拦截器统一鉴权 只放行 /api/login
 ---
 
 ## 🧭 项目定位
@@ -138,6 +173,17 @@ VO：后端 → 前端
 一个以 **"后端设计与结构能力"** 为核心的练手项目，  
 重点体现对 **业务边界、数据归属、分页查询** 以及  
 **单租户向多租户演进设计** 的理解与实践。
+
+## 并发与扩展性设计说明
+
+- 登录采用 JWT，无服务端 Session，支持多实例水平扩展
+- 所有业务接口为无状态接口
+- 分页查询避免大结果集
+- companyId 作为强制条件，保证数据隔离
+- 后续可引入：
+  - Redis 缓存热点工单
+  - 消息队列处理异步通知
+
 
 ---
 
