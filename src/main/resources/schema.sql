@@ -14,14 +14,18 @@ CREATE TABLE `company` (
 
 -- 3. 员工表
 CREATE TABLE `employee` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(100) NOT NULL COMMENT '姓名',
-  `role` VARCHAR(50) DEFAULT 'user' COMMENT '角色',
-  `company_id` BIGINT NOT NULL COMMENT '所属公司ID',
-  `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
-  PRIMARY KEY (`id`),
-  KEY `idx_employee_company` (`company_id`),
-  CONSTRAINT `fk_employee_company` FOREIGN KEY (`company_id`) REFERENCES `company`(`id`)
+                            `id` BIGINT NOT NULL AUTO_INCREMENT,
+                            `name` VARCHAR(100) NOT NULL COMMENT '姓名',
+                            `username` VARCHAR(50) NOT NULL COMMENT '登录用户名',
+                            `password_hash` VARCHAR(100) NOT NULL COMMENT '密码哈希',
+                            `role` VARCHAR(50) DEFAULT 'user' COMMENT '角色',
+                            `company_id` BIGINT NOT NULL COMMENT '所属公司ID',
+                            `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
+
+                            PRIMARY KEY (`id`),
+                            UNIQUE KEY `uk_employee_username` (`username`),
+                            KEY `idx_employee_company` (`company_id`),
+                            CONSTRAINT `fk_employee_company` FOREIGN KEY (`company_id`) REFERENCES `company`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 4. 工单表

@@ -25,4 +25,11 @@ public class Employee {
     private Long companyId;
 
     private String phone;
+
+    //账号密码
+    private String username;
+
+    @TableField("password_hash")
+    private String passwordHash;
+
 }

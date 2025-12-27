@@ -2,6 +2,7 @@ package com.ljc.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ljc.common.Result;
+import com.ljc.common.context.AuthContext;
 import com.ljc.dto.WorkOrderCreateReq;
 import com.ljc.dto.WorkOrderStatusReq;
 import com.ljc.dto.WorkOrderUpdateReq;
@@ -34,7 +35,7 @@ public class WorkOrderController {
             @RequestParam(required = false) Long creatorId,
             @RequestParam(required = false) Long handlerId
     ) {
-        Long companyId = 1L; // TODO 登录后从上下文取
+        Long companyId = AuthContext.getCompanyId();
 
         Page<WorkOrder> entityPage = workOrderService.pageWithCompany(
                 companyId, page, size, status, keyword, creatorId, handlerId
@@ -49,7 +50,7 @@ public class WorkOrderController {
      */
     @PostMapping("/api/work-orders")
     public Result<Long> createWorkOrder(@RequestBody WorkOrderCreateReq req) {
-        Long companyId = 1L; // TODO 登录后从上下文取
+        Long companyId = AuthContext.getCompanyId();
         Long id = workOrderService.createWorkOrder(companyId, req);
         return Result.success(id);
     }
@@ -60,7 +61,7 @@ public class WorkOrderController {
      */
     @GetMapping("/api/work-orders/{id}")
     public Result<WorkOrderVO> getWorkOrderDetail(@PathVariable Long id) {
-        Long companyId = 1L; // TODO 登录后从上下文取
+        Long companyId = AuthContext.getCompanyId();
         WorkOrder wo = workOrderService.getByIdWithCompany(companyId, id);
         return Result.success(toVO(wo));
     }
@@ -74,7 +75,7 @@ public class WorkOrderController {
             @PathVariable Long id,
             @RequestBody WorkOrderUpdateReq req
     ) {
-        Long companyId = 1L; // TODO 登录后从上下文取
+        Long companyId = AuthContext.getCompanyId();
 
         workOrderService.updateContentWithCompany(
                 companyId, id, req.getTitle(), req.getContent()
@@ -92,9 +93,8 @@ public class WorkOrderController {
             @PathVariable Long id,
             @RequestBody WorkOrderStatusReq req
     ) {
-        Long companyId = 1L; // TODO 登录后从上下文取
+        Long companyId = AuthContext.getCompanyId();
 
-        // ✅ 现在更新动作本身也做 company 校验了
         workOrderService.updateStatusWithCompany(companyId, id, req.getStatus());
 
         WorkOrder wo = workOrderService.getByIdWithCompany(companyId, id);

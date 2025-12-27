@@ -49,7 +49,7 @@ public class TicketServiceImpl
      * 调用链：
      * Controller -> TicketService.createTicket -> 本方法
      *
-     * @param companyId 当前公司（你现在 controller 里写死 1L，后面接登录上下文再改）
+     * @param companyId 当前公司
      * @param req       DTO：前端传入的创建参数
      * @return 新增记录 id
      */

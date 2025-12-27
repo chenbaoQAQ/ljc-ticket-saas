@@ -113,6 +113,7 @@
 ```text
 DTO：前端 → 后端
 VO：后端 → 前端
+```
 🚀 当前进度
 
 ✅ Service 接口统一
@@ -123,7 +124,13 @@ VO：后端 → 前端
 
 ### 📅 待进行
 
-⏳ 登录 & 动态 companyId 待实现
+⏳ Ticket SaaS 登录与鉴权改造记录
+目标
+实现 JWT 登录
+登录后从 token 上下文获取 companyId / employeeId
+所有业务接口不再写死 companyId = 1L
+
+拦截器统一鉴权 只放行 /api/login
 ---
 
 ## 🧭 项目定位
